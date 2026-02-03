@@ -106,47 +106,50 @@ const ExpenseTable = ({ expenses = [], onModified = () => {}, showToast = () => 
     }
   };
 
-  const deleteExpense = (id) => {
-    const item = visible.find(x => x.id === id);
-    if (!item) return;
-    if (!confirm('Delete this expense?')) return;
+const deleteExpense = (id) => {
+  const item = visible.find(x => x.id === id);
+  if (!item) return;
 
-    // remove immediately from UI (optimistic), but delay server DELETE so undo is possible
-    setVisible(v => v.filter(x => x.id !== id));
+  if (!confirm('Delete this expense?')) return;
 
-    const timer = setTimeout(async () => {
-      try {
-        await (await import('axios')).default.delete(`/expenses/${id}`);
+  // 1. Point to your LIVE Render URL
+  const API_DELETE_URL = `https://fenmo-1.onrender.com/expenses/${id}`;
+
+  // Optimistic UI update
+  setVisible(v => v.filter(x => x.id !== id));
+
+  const timer = setTimeout(async () => {
+    try {
+      // Use the absolute URL for the live environment
+      await (await import('axios')).default.delete(API_DELETE_URL);
+      pendingRef.current.delete(id);
+      onModified(); 
+    } catch (err) {
+      console.error('delete failed', err);
+      // Restore item if server fails (Production quality requirement) [cite: 13, 61]
+      setVisible(v => [item, ...v]);
+      pendingRef.current.delete(id);
+      toast.error('Delete failed', { duration: 4000 });
+    }
+  }, 5000); // 5s undo window
+
+  pendingRef.current.set(id, { item, timer });
+
+  toast.success('Expense deleted 🗑️', {
+    action: {
+      label: 'Undo',
+      onClick: () => {
+        const entry = pendingRef.current.get(id);
+        if (!entry) return;
+        clearTimeout(entry.timer);
         pendingRef.current.delete(id);
-        onModified(); // refresh from server
-      } catch (err) {
-        console.error('delete failed', err);
-        // restore item on failure
-        setVisible(v => [item, ...v]);
-        pendingRef.current.delete(id);
-        toast.error('Delete failed', { duration: 4000 });
+        setVisible(v => [entry.item, ...v]);
+        toast.success('Restored ↩️', { duration: 2600 });
       }
-    }, 5000); // 5s undo window
-
-    pendingRef.current.set(id, { item, timer });
-
-    // show Sonner toast with Undo action
-    toast.success('Expense deleted 🗑️', {
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          const entry = pendingRef.current.get(id);
-          if (!entry) return;
-          clearTimeout(entry.timer);
-          pendingRef.current.delete(id);
-          // restore in UI
-          setVisible(v => [entry.item, ...v]);
-          toast.success('Restored ↩️', { duration: 2600 });
-        }
-      },
-      duration: 5000
-    });
-  };
+    },
+    duration: 5000
+  });
+};
 
   return (
     <div className="table-wrap card" style={{ padding: 0 }}>
