@@ -52,55 +52,64 @@ const ExpenseTable = ({ expenses = [], onModified = () => {}, showToast = () => 
     return visible.reduce((s, it) => s + (Number(it.amount) || 0), 0);
   }, [visible]);
 
-const saveEdit = async (id) => {
-  // Clear previous error for this row
-  setRowErrors(r => ({ ...r, [id]: null }));
-
-  // Basic validation (Requirement: prevent negative amounts, require date) 
-  if (!editingData.amount || Number(editingData.amount) <= 0) {
-    setRowErrors(r => ({ ...r, [id]: 'Enter a valid amount' }));
-    return;
-  }
-  if (!editingData.date) {
-    setRowErrors(r => ({ ...r, [id]: 'Please set a date' }));
-    return;
-  }
-
-  const payload = {
-    amount: Number(editingData.amount),
-    description: editingData.description,
-    category: editingData.category,
-    date: editingData.date
+  const startEdit = (exp) => {
+    setEditingId(exp.id);
+    setEditingData({ amount: String(exp.amount || ''), description: exp.description || '', category: exp.category || '', date: exp.date || '' });
   };
 
-  // Define your absolute Render URL
-  const API_PUT_URL = `https://fenmo-1.onrender.com/expenses/${id}`;
+  const cancelEdit = () => { setEditingId(null); setEditingData({}); };
 
-  setSavingId(id);
-  try {
-    const axios = (await import('axios')).default;
-    // Update: Use absolute URL to prevent 404s on Netlify [cite: 42]
-    const res = await axios.put(API_PUT_URL, payload);
+  const saveEdit = async (id) => {
+    // clear previous error for this row
+    setRowErrors(r => ({ ...r, [id]: null }));
 
-    if (res?.data) {
-      setVisible(v => v.map(x => x.id === id ? res.data : x));
-    } else {
-      setVisible(v => v.map(x => x.id === id ? { ...x, ...payload } : x));
+    // simple client validation
+    if (!editingData.amount || Number(editingData.amount) <= 0) {
+      setRowErrors(r => ({ ...r, [id]: 'Enter a valid amount' }));
+      return;
+    }
+    if (!editingData.date) {
+      setRowErrors(r => ({ ...r, [id]: 'Please set a date' }));
+      return;
     }
 
-    setEditingId(null);
-    await onModified(); // Refresh list [cite: 9]
-    toast.success('Saved ✓', { duration: 2000 });
-  } catch (err) {
-    console.error('update failed', err);
-    // Requirement: Handle failed API responses gracefully 
-    const msg = err?.response?.data?.message || 'Update failed — try again';
-    setRowErrors(r => ({ ...r, [id]: msg }));
-    toast.error(msg, { duration: 3200 });
-  } finally {
-    setSavingId(null);
-  }
-};
+    const payload = {
+      amount: Number(editingData.amount),
+      description: editingData.description,
+      category: editingData.category,
+      date: editingData.date
+    };
+
+    setSavingId(id);
+        try {
+            const axios = (await import('axios')).default;
+            
+            // Requirement: Use the full Render URL for the live environment 
+            const API_URL = `https://fenmo-1.onrender.com/expenses/${id}`;
+            
+            const res = await axios.put(API_URL, payload);
+
+            // Update visible row from server response if provided [cite: 27]
+            if (res?.data) {
+                setVisible(v => v.map(x => x.id === id ? res.data : x));
+            } else {
+                setVisible(v => v.map(x => x.id === id ? { ...x, ...payload } : x));
+            }
+
+            // Close editor only after server success to avoid layout jumps [cite: 13, 61]
+            setEditingId(null);
+            await onModified(); // Triggers list refresh [cite: 9]
+            toast.success('Saved ✓', { duration: 2000 });
+            } catch (err) {
+            console.error('update failed', err);
+            // Requirement: Handle failed API responses [cite: 54, 61]
+            const msg = err?.response?.data?.message || 'Update failed — try again';
+            setRowErrors(r => ({ ...r, [id]: msg }));
+            toast.error(msg, { duration: 3200 });
+            } finally {
+            setSavingId(null); // Clear loading state [cite: 61]
+        }
+  };
 
 const deleteExpense = (id) => {
   const item = visible.find(x => x.id === id);
