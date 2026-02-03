@@ -52,59 +52,55 @@ const ExpenseTable = ({ expenses = [], onModified = () => {}, showToast = () => 
     return visible.reduce((s, it) => s + (Number(it.amount) || 0), 0);
   }, [visible]);
 
-  const startEdit = (exp) => {
-    setEditingId(exp.id);
-    setEditingData({ amount: String(exp.amount || ''), description: exp.description || '', category: exp.category || '', date: exp.date || '' });
+const saveEdit = async (id) => {
+  // Clear previous error for this row
+  setRowErrors(r => ({ ...r, [id]: null }));
+
+  // Basic validation (Requirement: prevent negative amounts, require date) 
+  if (!editingData.amount || Number(editingData.amount) <= 0) {
+    setRowErrors(r => ({ ...r, [id]: 'Enter a valid amount' }));
+    return;
+  }
+  if (!editingData.date) {
+    setRowErrors(r => ({ ...r, [id]: 'Please set a date' }));
+    return;
+  }
+
+  const payload = {
+    amount: Number(editingData.amount),
+    description: editingData.description,
+    category: editingData.category,
+    date: editingData.date
   };
 
-  const cancelEdit = () => { setEditingId(null); setEditingData({}); };
+  // Define your absolute Render URL
+  const API_PUT_URL = `https://fenmo-1.onrender.com/expenses/${id}`;
 
-  const saveEdit = async (id) => {
-    // clear previous error for this row
-    setRowErrors(r => ({ ...r, [id]: null }));
+  setSavingId(id);
+  try {
+    const axios = (await import('axios')).default;
+    // Update: Use absolute URL to prevent 404s on Netlify [cite: 42]
+    const res = await axios.put(API_PUT_URL, payload);
 
-    // simple client validation
-    if (!editingData.amount || Number(editingData.amount) <= 0) {
-      setRowErrors(r => ({ ...r, [id]: 'Enter a valid amount' }));
-      return;
+    if (res?.data) {
+      setVisible(v => v.map(x => x.id === id ? res.data : x));
+    } else {
+      setVisible(v => v.map(x => x.id === id ? { ...x, ...payload } : x));
     }
-    if (!editingData.date) {
-      setRowErrors(r => ({ ...r, [id]: 'Please set a date' }));
-      return;
-    }
 
-    const payload = {
-      amount: Number(editingData.amount),
-      description: editingData.description,
-      category: editingData.category,
-      date: editingData.date
-    };
-
-    setSavingId(id);
-    try {
-      const axios = (await import('axios')).default;
-      const res = await axios.put(`/expenses/${id}`, payload);
-
-      // update visible row from server response if provided, otherwise optimistic update
-      if (res?.data) {
-        setVisible(v => v.map(x => x.id === id ? res.data : x));
-      } else {
-        setVisible(v => v.map(x => x.id === id ? { ...x, ...payload } : x));
-      }
-
-      // close editor only when server accepted the change to avoid layout jumps
-      setEditingId(null);
-      await onModified();
-      toast.success('Saved ✓', { duration: 2000 });
-    } catch (err) {
-      console.error('update failed', err);
-      const msg = err?.response?.data?.message || 'Update failed — try again';
-      setRowErrors(r => ({ ...r, [id]: msg }));
-      toast.error(msg, { duration: 3200 });
-    } finally {
-      setSavingId(null);
-    }
-  };
+    setEditingId(null);
+    await onModified(); // Refresh list [cite: 9]
+    toast.success('Saved ✓', { duration: 2000 });
+  } catch (err) {
+    console.error('update failed', err);
+    // Requirement: Handle failed API responses gracefully 
+    const msg = err?.response?.data?.message || 'Update failed — try again';
+    setRowErrors(r => ({ ...r, [id]: msg }));
+    toast.error(msg, { duration: 3200 });
+  } finally {
+    setSavingId(null);
+  }
+};
 
 const deleteExpense = (id) => {
   const item = visible.find(x => x.id === id);
