@@ -13,7 +13,7 @@ import java.util.List;
 
 // Allow the Vite dev server (and localhost tools) to access the API during development.
 // Restrict origins in production as needed.
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"})
+@CrossOrigin(origins = {"*"})
 @RestController
 @RequestMapping("/expenses")
 public class ExpenseController {
