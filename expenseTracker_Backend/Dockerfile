@@ -1,16 +1,13 @@
-# Stage 1: Build
-FROM eclipse-temurin:25-jdk-alpine AS build
+# ... Stage 1 remains the same ...
+RUN ./mvnw clean package -DskipTests
+
+# Stage 2: Run
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-# Copy maven wrapper and pom file
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
+# Explicitly copy the jar.
+# Note: Check your pom.xml <artifactId>. If it's 'fenmo', the jar is 'fenmo-0.0.1-SNAPSHOT.jar'
+COPY --from=build /app/target/*.jar app.jar
 
-# FIX: Grant execution permission to the maven wrapper [cite: 6]
-RUN chmod +x mvnw
-
-RUN ./mvnw dependency:go-offline
-
-# Copy source code and build
-COPY src ./src
-RUN ./mvnw clean package -DskipTests
+# Force the entrypoint to use the JAR launcher
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/app.jar"]
