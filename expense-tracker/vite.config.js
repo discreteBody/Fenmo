@@ -8,9 +8,9 @@ export default defineConfig({
     proxy: {
       // forward requests from the dev server to the Spring Boot backend
       '/expenses': {
-        target: 'http://localhost:8080',
+        target: 'https://fenmo-1.onrender.com',
         changeOrigin: true,
-        secure: false
+        secure: true
       }
     }
   }
