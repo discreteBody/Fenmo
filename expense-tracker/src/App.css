@@ -1,0 +1,148 @@
+/* Premium Expense Tracker UI - App-level styles */
+
+/* Typography hierarchy & baseline */
+body {
+  font-family: 'Inter', -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Remove default margins on headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+p {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+/* Root container — no center constraint, let CSS Grid handle layout */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Premium card styles (reusable for future modals, panels) */
+.card-premium {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.2, 1), 
+              box-shadow 300ms ease,
+              border-color 300ms ease;
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139,124,255,0.2);
+  box-shadow: 0 24px 60px rgba(139,124,255,0.12);
+}
+
+/* Elevated section for important content */
+.section-elevated {
+  background: linear-gradient(135deg, rgba(139,124,255,0.08), rgba(89,230,199,0.04));
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(139,124,255,0.08);
+}
+
+/* Link styles (if needed) */
+a {
+  color: var(--accent-a);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+a:hover {
+  color: var(--accent-b);
+  text-decoration: underline;
+}
+
+/* Code snippet style (for debugging) */
+code {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9em;
+  background: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #7cc8ff;
+}
+
+/* Utility classes for spacing & layout */
+.gap-sm { gap: 8px; }
+.gap-md { gap: 12px; }
+.gap-lg { gap: 16px; }
+.gap-xl { gap: 20px; }
+
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 12px; }
+.mt-lg { margin-top: 16px; }
+.mt-xl { margin-top: 20px; }
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.1rem; }
+  
+  .card-premium {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}
+
+/* Animations & transitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 400ms ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 500ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 600ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Accessibility: respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
