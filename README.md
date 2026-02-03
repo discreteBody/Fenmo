@@ -83,4 +83,4 @@ Base path: `/expenses`
 - Add authentication if you need multi-user support.
 
 ---
-If you'd like, I can also add a short README inside `expense-tracker` and/or `expenseTracker_Backend` with repository-specific run commands. Tell me where you prefer it.
+
