@@ -1,13 +1,18 @@
-# ... Stage 1 remains the same ...
-RUN ./mvnw clean package -DskipTests
-
-# Stage 2: Run
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:25-jdk-alpine
 WORKDIR /app
 
-# Explicitly copy the jar.
-# Note: Check your pom.xml <artifactId>. If it's 'fenmo', the jar is 'fenmo-0.0.1-SNAPSHOT.jar'
-COPY --from=build /app/target/*.jar app.jar
+# Copy all files from the backend directory
+COPY . .
 
-# Force the entrypoint to use the JAR launcher
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/app.jar"]
+# Fix permissions and build the jar
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
+
+# Find the jar and rename it to app.jar to be 100% sure of the path
+RUN mv target/*.jar app.jar
+
+# Explicitly set the port and the entrypoint
+ENV PORT=8080
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
