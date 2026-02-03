@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import ExpenseForm from './ExpenseForm';
 import ExpenseTable from './ExpenseTable';
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? '/expenses';
+// Change this from '/expenses' to your actual Render URL
+const API_BASE = 'https://fenmo-1.onrender.com/expenses';
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
 const ExpenseTracker = () => {
