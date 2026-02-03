@@ -22,7 +22,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
     setIsSubmitting(true);
 
     try {
-      await axios.post('/expenses', { ...previous, idempotencyKey });
+      await axios.post('https://fenmo-1.onrender.com/expenses', { ...previous, idempotencyKey });
       setIdempotencyKey(uuidv4()); // prepare for next entry
       toast.success('Expense added ✨', { duration: 2000 });
       onExpenseAdded();
